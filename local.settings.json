@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "no_proxy": "localhost,127.0.0.1",
+    "AzureWebJobsFeatureFlags":"EnableWorkerIndexing",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "PYTHON_PATH": "venv\\Scripts\\python.exe"
+  },
+  "ConnectionStrings": {}
+}

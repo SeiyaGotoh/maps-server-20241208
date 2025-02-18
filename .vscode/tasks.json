@@ -1,0 +1,60 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "func",
+			"label": "func: host start",
+			"command": "host start",
+			"problemMatcher": "$func-python-watch",
+			"isBackground": true,
+			"dependsOn": "pip install (functions)"
+		},
+		{
+			"label": "pip install (functions)",
+			"type": "shell",
+			"osx": {
+				"command": "${config:azureFunctions.pythonVenv}/bin/python -m pip install -r requirements.txt"
+			},
+			"windows": {
+				"command": "${config:azureFunctions.pythonVenv}\\Scripts\\python -m pip install -r requirements.txt"
+			},
+			"linux": {
+				"command": "${config:azureFunctions.pythonVenv}/bin/python -m pip install -r requirements.txt"
+			},
+			"problemMatcher": [],
+			"isBackground": true,
+			"dependsOn": "venv activate"
+		},
+		{
+			"label": "venv activate",
+			"type": "shell",
+			"osx": {
+				"command": "venv/scripts/activate"
+			},
+			"windows": {
+				"command": "venv/scripts/activate"
+			},
+			"linux": {
+				"command": "venv/scripts/activate"
+			},
+			"problemMatcher": [],
+			"isBackground": true,
+			// "dependsOn": "pyenv local 3.11.5"
+		},
+		// {
+		// 	"label": "pyenv local 3.11.5",
+		// 	"type": "shell",
+		// 	"osx": {
+		// 		"command": "pyenv local 3.11.5"
+		// 	},
+		// 	"windows": {
+		// 		"command": "pyenv local 3.11.5"
+		// 	},
+		// 	"linux": {
+		// 		"command": "pyenv local 3.11.5"
+		// 	},
+		// 	"problemMatcher": [],
+		// 	"isBackground": true
+		// }
+	]
+}
