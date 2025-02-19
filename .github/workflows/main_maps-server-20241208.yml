@@ -35,7 +35,9 @@ jobs:
           source venv/bin/activate
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |          
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       # Optional: Add step to run tests here
 
@@ -73,6 +75,7 @@ jobs:
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1ED6C0693A004E9C8408F1CC72F21540 }}
           
       - name: pip install
-        run: |
+        run: |        
+          python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           
