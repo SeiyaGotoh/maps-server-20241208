@@ -73,7 +73,7 @@ jobs:
           python --version
           pip install --upgrade pip
           python -m pip install -r requirements.txt
-          ls /home/site/wwwroot/venv/lib/python3.11/site-packages | grep azure
+          ls /home/site/wwwroot/venv/lib64/python3.11/site-packages | grep azure
         
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
