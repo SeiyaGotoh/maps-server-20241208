@@ -15,7 +15,7 @@ click==8.1.8
 colorama==0.4.6
 configobj==5.0.9
 configparser==7.1.0
-cryptography==43.0.3
+cryptography
 distro==1.9.0
 etelemetry==0.3.1
 fastapi==0.115.8
@@ -28,6 +28,7 @@ httplib2==0.22.0
 httpx==0.28.1
 idna==3.10
 importlib_resources==6.4.5
+pyOpenSSL
 iniconfig==2.0.0
 isodate==0.6.1
 itsdangerous==2.2.0
@@ -73,5 +74,5 @@ tqdm==4.67.1
 traits==7.0.2
 typing_extensions==4.12.2
 tzdata==2025.1
-urllib3==2.2.3
+urllib3
 uvicorn==0.34.0
