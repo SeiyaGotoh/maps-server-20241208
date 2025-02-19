@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           set -e
-          pip install -r requirements.txt
+          venv/bin/python -m pip install -r requirements.txt
 
       # Optional: Add step to run tests here
 
