@@ -44,5 +44,5 @@ numpy==2.2.0
 openai==1.57.2
 packaging==24.2
 pyparsing>=3.0.9  # 修正: pyparsingのバージョンを3.0.9以上に変更
-rdflib==6.x  # 修正: rdflibのバージョンを6.xに変更
+rdflib==6.1  # 修正: rdflibのバージョンを6.xに変更
 testresources  # 修正: testresourcesを追加
