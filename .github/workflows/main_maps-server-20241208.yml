@@ -71,6 +71,7 @@ jobs:
         run: |
           source venv/bin/activate
           python --version
+          python -m pip install -r requirements.txt
         
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
