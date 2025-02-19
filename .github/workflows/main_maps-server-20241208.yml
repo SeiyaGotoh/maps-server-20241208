@@ -65,11 +65,10 @@ jobs:
           name: python-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip -d /home/site/wwwroot
+        run: unzip release.zip
         
       - name: Activate virtual environment
         run: |
-          cd /home/site/wwwroot
           source venv/bin/activate
           python --version
           pip install --upgrade pip
@@ -86,5 +85,14 @@ jobs:
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1ED6C0693A004E9C8408F1CC72F21540 }}
-
           
+      - name: Activate virtual environment
+        run: |
+          cd /home/site/wwwroot
+          source venv/bin/activate
+          python --version
+          pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          pip show azure-storage-blob
+          python -c "import azure.storage.blob; print('Azure Storage Blob is installed.')"
+          python -c "import azure.storage.blob; print(azure.storage.blob.__file__)"
