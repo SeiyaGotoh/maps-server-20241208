@@ -77,7 +77,7 @@ jobs:
       - name: pip install
         run: |        
           for package in $(cat requirements.txt); do
-            python -m pip install $package || echo "Failed to install $package"
+            python -m pip install $package 
           done
 
           
