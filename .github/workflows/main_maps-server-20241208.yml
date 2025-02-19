@@ -74,7 +74,7 @@ jobs:
           enable-oryx-build: true
           remote-build: true
           respect-funcignore: true
-          package: 'release.zip'
+          package: '/home/runner/work/maps-server-20241208/maps-server-20241208/release.zip'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1ED6C0693A004E9C8408F1CC72F21540 }}
           
       - name: Activate virtual environment
