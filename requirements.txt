@@ -39,7 +39,7 @@ msal==1.31.1
 msal-extensions==1.2.0
 networkx==3.1
 nibabel
-nipype==1.9.2
+nipype==1.8.6
 numpy==2.2.0
 openai==1.57.2
 packaging==24.2
