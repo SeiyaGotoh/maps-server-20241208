@@ -57,6 +57,13 @@ jobs:
     needs: build
     
     steps:
+    
+      - name: Create and start virtual environment
+        run: |
+          source venv/bin/activate
+          python --version
+          pip --version
+          
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
@@ -73,14 +80,5 @@ jobs:
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1ED6C0693A004E9C8408F1CC72F21540 }}
-          
-      - name: pip install
-        run: |
-          python --version
-          pip --version
-          source venv/bin/activate
-          python --version
-          pip --version
-          python -m pip install -r requirements.txt
 
           
