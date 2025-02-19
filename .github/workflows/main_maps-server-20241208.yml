@@ -71,3 +71,7 @@ jobs:
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1ED6C0693A004E9C8408F1CC72F21540 }}
+          
+      - name: check azure-storage-blob
+        run: |
+          ls -l /home/site/wwwroot/.python_packages/lib/site-packages/ | grep azure
