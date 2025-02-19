@@ -65,10 +65,11 @@ jobs:
           name: python-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip     
-
+        run: unzip release.zip -d /home/site/wwwroot
+        
       - name: Activate virtual environment
         run: |
+          cd /home/site/wwwroot
           source venv/bin/activate
           python --version
           pip install --upgrade pip
