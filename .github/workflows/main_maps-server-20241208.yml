@@ -74,4 +74,5 @@ jobs:
           
       - name: check azure-storage-blob
         run: |
-          ls -l /home/site/wwwroot/.python_packages/lib/site-packages/ | grep azure
+          ls -l /home/site/.python_packages/lib/site-packages/ | grep azure
+          
