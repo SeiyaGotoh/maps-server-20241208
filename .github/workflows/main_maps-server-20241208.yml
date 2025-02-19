@@ -71,6 +71,7 @@ jobs:
         run: |
           source venv/bin/activate
           python --version
+          pip install --upgrade pip
           python -m pip install -r requirements.txt
         
       - name: 'Deploy to Azure Functions'
