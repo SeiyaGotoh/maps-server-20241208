@@ -8,5 +8,13 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "- develop を正規ブランチとして運用\r - 各自のブランチは、'woek_for_{名前}'で設定\r - main を develop からmergeして、デプロイ",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeiyaGotoh/maps-server-20241208.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SeiyaGotoh/maps-server-20241208/issues"
+  },
+  "homepage": "https://github.com/SeiyaGotoh/maps-server-20241208#readme"
 }
