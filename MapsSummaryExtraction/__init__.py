@@ -17,30 +17,33 @@ output_container_client = blob_service_client.get_container_client(OUTPUT_CONTAI
 
 def extract_summary(text: str) -> str:
     """
-    【要約】の部分のみを抽出し、【目的】や【構成】、<BR>を削除
+    【要約】の部分のみを抽出し、【目的】や【構成】、【効果】、<BR>を削除
     """
-    match = re.search(r'【要約】(.*?)$', text, re.DOTALL)
+    match = re.search(r'【要約】(.*?)<TXF', text, re.DOTALL)  # 【要約】とその後のTXFタグを抽出
     if match:
-        summary = match.group(1)
+        summary = match.group(1).strip()
 
-        # 【目的】部分を取得
-        purpose_match = re.search(r'【目的】(.*?)【構成】', summary, re.DOTALL)
-        purpose_text = purpose_match.group(1).strip() if purpose_match else ""
-
-        # 【構成】部分も取得
-        structure_match = re.search(r'【構成】(.*?)$', summary, re.DOTALL)
-        structure_text = structure_match.group(1).strip() if structure_match else ""
+        # 不要なタイトル部分を削除するためのパターン
+        patterns_to_remove = [
+            r'【目的】.*?【構成】',  # 【目的】と【構成】の間のテキスト
+            r'【構成】.*?【効果】',  # 【構成】と【効果】の間のテキスト
+            r'【目\s?的】.*?【構\s?成】',  # 【目  的】と【構  成】の間のテキスト
+            r'【効果】.*$',  # 【効果】以降のテキスト
+            r'［目的］.*?［構成］',  # ［目的］と［構成］の間のテキスト
+            r'［目\s?的］.*?［構\s?成］',  # ［目  的］と［構  成］の間のテキスト
+        ]
+        
+        # 不要な部分をすべて削除
+        for pattern in patterns_to_remove:
+            summary = re.sub(pattern, "", summary, flags=re.DOTALL)
 
         # <BR>を削除
-        purpose_text = purpose_text.replace("<BR>", "")
-        structure_text = structure_text.replace("<BR>", "")
+        summary = summary.replace("<BR>", "").strip()
 
-        # < 以降の文字列を削除
-        purpose_text = purpose_text.split("<")[0]
-        structure_text = structure_text.split("<")[0]
+        # <以降の文字列を削除
+        summary = summary.split("<")[0].strip()
 
-        # 目的と構成を結合して返す
-        return f"{purpose_text}\n{structure_text}".strip()
+        return summary.strip()
 
     return ""
 
