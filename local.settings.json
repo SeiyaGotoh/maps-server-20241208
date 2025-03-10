@@ -5,7 +5,10 @@
     "no_proxy": "localhost,127.0.0.1",
     "AzureWebJobsFeatureFlags":"EnableWorkerIndexing",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "PYTHON_PATH": "venv\\Scripts\\python.exe"
+    "PatentBlobConnectionString": "efaultEndpointsProtocol=https;AccountName=maps5370605259;AccountKey=DefaultEndpointsProtocol=https;AccountName=maps5370605259;AccountKey=jA9t0HLlnYSLmPbSf6RkEg8emdkjhHO9JfkL5XT8HNX8H4kfq+WCHO/v0fwXgN4b083JhPDP77Fk+AStBofZPg==;EndpointSuffix=core.windows.net;EndpointSuffix=core.windows.net",
+    "PYTHON_PATH": "venv\\Scripts\\python.exe",
+    "INPUT_BLOB_CONTAINER": "all-data-txt",
+    "OUTPUT_BLOB_CONTAINER": "summary-text-only"
   },
   "ConnectionStrings": {}
 }
