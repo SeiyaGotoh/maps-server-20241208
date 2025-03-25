@@ -1,9 +1,9 @@
 # azureの検索機能
 
+from Mapslog.openAI import get_embedding
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.models import VectorizedQuery
-from functions.openAI import get_embedding
 
 # import os
 # from dotenv import load_dotenv
