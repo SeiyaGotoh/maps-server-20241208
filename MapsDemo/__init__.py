@@ -20,7 +20,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # ベクトル検索
         items = []
         for item in search_sample_vector(word,int(top)):
-            items.append(item) 
+            items.append({
+                "score": item["@search.score"],  # スコア追加
+                "chunk": item["chunk"],          # ドキュメント全体
+                "title": item["title"],          # タイトル
+            }) 
 
         return func.HttpResponse(json.dumps({"result": items}, ensure_ascii=False), mimetype="application/json")
     except Exception as e:
@@ -33,6 +37,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
 from openai import AzureOpenAI
+import numpy as np
 
 client = AzureOpenAI(
     api_version="2023-03-15-preview",
@@ -46,7 +51,7 @@ def get_embedding(text: str, engine="text-embedding-ada-002"):
         input=text,
         model=engine  # 埋め込みモデルの名前
     )
-    return response.data[0].embedding
+    return np.array(response.data[0].embedding, dtype=np.float32).tolist()
 
 
 # azureの検索機能
@@ -69,7 +74,10 @@ def search_sample_vector(message: str,top:int=5) -> str:
         # ベクトル検索を実行
         vector_query = VectorizedQuery(
                 vector=get_embedding(message),
-                fields="text_vector"
+                fields="text_vector",
+                k_nearest_neighbors=top,
+                kind="vector",
+                vector_search_configuration="default"  # 明示的に指定
                 )
         return search_client.search(
                 search_text="",# フルテキスト検索は空にします
