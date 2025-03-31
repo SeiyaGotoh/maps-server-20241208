@@ -1,4 +1,5 @@
 import logging
+import traceback
 from urllib import response
 import azure.functions as func
 import os
@@ -9,18 +10,27 @@ import json
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python MapsDemo function processed a request.',{req})
+    
+    response = {}
+    try:
 
-    req_body = req.get_json()
-    # 検索ワード
-    word = req_body.params.get('word')
-    # 検索数
-    top = req_body.get('top')
+        req_body = req.get_json()
+        # 検索ワード
+        word = req_body.params.get('word')
+        # 検索数
+        top = req_body.get('top')
+        # ベクトル検索
+        response["result"]=search_sample_vector(word,int(top))
 
-    result_titles=[]
-    # 検索の選択
-    response["result"]=search_sample_vector(word,int(top))
-
-    return func.HttpResponse(json.dumps(response), mimetype="application/json")
+        return func.HttpResponse(json.dumps(response), mimetype="application/json")
+    except Exception as e:
+        logging.error("500 Internal Server Error: %s", str(e))
+        logging.error(traceback.format_exc())  # スタックトレースをログ出力
+        return func.HttpResponse(
+            json.dumps({"error": "Internal Server Error", "details": str(e)}),
+            status_code=500,
+            mimetype="application/json"
+        )
 
 from openai import AzureOpenAI
 
@@ -54,6 +64,7 @@ endpoint = f"https://{service_name}.search.windows.net/"
 
 # ベクトル検索
 def search_sample_vector(message: str,top:int=5) -> str:
+        logging.info('search_sample_vector function processed a message.',{message})
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
         vector_query = VectorizedQuery(
