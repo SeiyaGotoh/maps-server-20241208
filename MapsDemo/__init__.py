@@ -11,18 +11,18 @@ import json
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f'Python MapsDemo function processed a request.{req}')
     
-    response = {}
     try:
-
         req_body = req.get_json()
         # 検索ワード
         word = req_body.get('word')
         # 検索数
         top = req_body.get('top')
         # ベクトル検索
-        response["result"]=search_sample_vector(word,int(top))
+        items = []
+        for item in search_sample_vector(word,int(top)):
+            items.append(item) 
 
-        return func.HttpResponse(json.dumps(response), mimetype="application/json")
+        return func.HttpResponse(json.dumps({"result": items}, ensure_ascii=False), mimetype="application/json")
     except Exception as e:
         logging.error(f"500 Internal Server Error: {str(e)}")
         logging.error(traceback.format_exc())  # スタックトレースをログ出力
