@@ -36,29 +36,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
 
-from openai import AzureOpenAI
-import numpy as np
-
-client = AzureOpenAI(
-    api_version="2023-03-15-preview",
-    azure_endpoint="https://ateamopenai.openai.azure.com/",
-    api_key="b7e21555bf544a038f1b26c9d9b0fb9e",
-)
-
-def get_embedding(text: str, engine="text-embedding-ada-002"):
-    # OpenAI埋め込みモデルを使用してテキストをベクトル化
-    response = client.embeddings.create(
-        input=text,
-        model=engine  # 埋め込みモデルの名前
-    )
-    return np.array(response.data[0].embedding, dtype=np.float32).tolist()
-
 
 # azureの検索機能
 
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
-from azure.search.documents.models import VectorizedQuery
+from azure.search.documents.models import VectorizableTextQuery
 
 
 service_name = "maps"
@@ -72,15 +55,12 @@ def search_sample_vector(message: str,top:int=5) -> str:
         logging.info(f'search_sample_vector function processed a message.{message}')
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
-        vector_query = VectorizedQuery(
-                vector=get_embedding(message),
-                fields="text_vector",
-                k_nearest_neighbors=top,
-                kind="vector",
-                vector_search_configuration="default"  # 明示的に指定
+        vector_query = VectorizableTextQuery(
+                vector=message, k_nearest_neighbors=50, fields="vector", exhaustive=True
                 )
         return search_client.search(
-                search_text="",# フルテキスト検索は空にします
+                search_text=None,# フルテキスト検索は空にします
                 vector_queries=[vector_query],
+                select=["title", "chunk_id", "chunk"],
                 top=top 
         )
