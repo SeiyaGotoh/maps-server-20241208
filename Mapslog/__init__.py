@@ -30,11 +30,9 @@ for folder in os.listdir(parent_dir):
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f'Python HTTP trigger function processed a request.{req}')
 
-    name = req.params.get('name')
     req_body = req.get_json()
-    sample_number = req.params.get('sample_number')
+    sample_number = req_body.get('sample_number')
     loop = int(req.params.get('loop') or 1)
-    req_body:any
     
     for i in range(loop):
         sample_number = req_body.get('sample_number')

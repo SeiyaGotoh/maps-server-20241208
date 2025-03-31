@@ -16,7 +16,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         req_body = req.get_json()
         # 検索ワード
-        word = req_body.params.get('word')
+        word = req_body.get('word')
         # 検索数
         top = req_body.get('top')
         # ベクトル検索
