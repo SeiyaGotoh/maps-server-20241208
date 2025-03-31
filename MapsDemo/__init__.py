@@ -59,7 +59,7 @@ def search_sample_vector(message: str,top:int=5) -> str:
                 vector=message, k_nearest_neighbors=50, fields="vector", exhaustive=True
                 )
         return search_client.search(
-                text=None,# フルテキスト検索は空にします
+                search_text="",# フルテキスト検索は空にします
                 vector_queries=[vector_query],
                 select=["title", "chunk_id", "chunk"],
                 top=top 
