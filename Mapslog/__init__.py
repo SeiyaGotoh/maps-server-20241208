@@ -180,6 +180,7 @@ def get_random_nameList(count:int=3) -> list[dict] :
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.models import VectorizedQuery
+from azure.search.documents.models import VectorizableTextQuery
 
 # import os
 # from dotenv import load_dotenv
@@ -223,12 +224,14 @@ def search_sample_index(message: str,top:int=5) -> str:
 def search_sample_hybrid(message: str,top:int=5) -> str:
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
-        vector_query = VectorizedQuery(
-                vector=get_embedding(message),
-                fields="text_vector",
+        vector_query = VectorizableTextQuery(
+                text=message, 
+                k_nearest_neighbors=50, 
+                fields="text_vector", 
+                exhaustive=True,
                 top_k=5,  # 類似度の高い上位5件を取得
                 boost=1.0  # ベクトル検索の重要度（boost値）
-                )
+        )
         return search_client.search(
                 search_text=message,
                 vector_queries=[vector_query],
