@@ -41,13 +41,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         req_body = req.get_json()
         sample_number = int(req_body.get('sample_number')or 1)#生成に使用するサンプル数、0の時そのまま使用
         try_times = int(req_body.get('try_times')or 1)#
+        name = int(req_body.get('name')or 1)#
         loop = int(req_body.get('loop') or 1)#ループ回数
         top = int(req_body.get('top') or 1)#検索結果数
         model=req_body.get("model")#gptモデル
         search=req_body.get("search")#searchモデル
         
         logging.info(f'mago log.loop={loop}.top={top}')
-        for _ in range(loop):
+        for i in range(loop):
             temp = get_random_nameList(sample_number)
             if not temp:
                 logging.info(f'[Skip] temp')
@@ -90,13 +91,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logger.addHandler(AzureLogHandler(connection_string="InstrumentationKey=90400575-c365-4f36-b271-dbd91fc5fc37;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=071ce0b4-9e9c-45c0-b6c2-13240885c6fd"))
 
             # カスタムディメンション付きでログ送信
-            logger.info("search_result_2", extra={
+            logger.info("search_result_3", extra={
                 "custom_dimensions": {
                     "sampleNumber": str(sample_number), # 元データ数
                     "top": str(top),          # 検索数（横軸）
                     "matchList": str(matchlist),         # 一致数（縦軸)
                     "model": model,          # モデル
-                    "search": search          # 検索モデル
+                    "search": search,          # 検索モデル
+                    "count": str(i),
+                    "name": name
                 }
             })
 
