@@ -38,16 +38,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     }
     try:
         req_body = req.get_json()
-        sample_number = int(req_body.get('sample_number')or 1)
-        try_times = int(req_body.get('try_times')or 1)
-        loop = int(req_body.get('loop') or 1)
-        top = int(req_body.get('top') or 1)
-        model=req_body.get("model")
+        sample_number = int(req_body.get('sample_number')or 1)#生成に使用するサンプル数、0の時そのまま使用
+        try_times = int(req_body.get('try_times')or 1)#
+        loop = int(req_body.get('loop') or 1)#ループ回数
+        top = int(req_body.get('top') or 1)#検索結果数
+        model=req_body.get("model")#gptモデル
         
         for _ in range(loop):
             temp = get_random_nameList(sample_number)
             titles = [claim["title"] for claim in temp] 
-            combined_claims = "\n\n".join([f"{claim['text']}" for claim in temp])
+            combined_claims = "\n\n".join([f"{claim['text']}" for claim in temp])[:8000]
             
             logging.info(f'mago log.temp={temp}.titles={titles}.combined_claims={combined_claims}')
             # まとめたテキストを新しい請求項の生成用に加工
@@ -56,10 +56,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 f"{combined_claims}\n\n"
                 "これらを基にした似ている請求項を以下に記述してください。:"
             )
-            if(sample_number==0):
+            if(sample_number!=0):
                 text = chat_sample(prompt,model)
             else:
                 text = combined_claims
+            text = text[:8000]  # 長すぎる入力をカット
             response_data["titles"].append(titles)
             response_data["search_text"].append(temp)
             response_data["create_text"].append(text)
