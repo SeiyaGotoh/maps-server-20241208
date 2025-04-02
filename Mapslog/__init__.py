@@ -28,7 +28,7 @@ for folder in os.listdir(parent_dir):
         sys.path.append(folder_path)
 
 
-async def main(req: func.HttpRequest) -> func.HttpResponse:
+def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f'Python HTTP trigger function processed a request.{req}')
     response_data={
         "titles": [],
@@ -48,7 +48,9 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
         
         logging.info(f'mago log.loop={loop}.top={top}')
         for _ in range(loop):
-            temp = await get_random_nameList(sample_number)
+            temp = get_random_nameList(sample_number)
+            if not result:
+                continue
             titles = [claim["title"] for claim in temp] 
             combined_claims = "\n\n".join([f"{claim['text']}" for claim in temp])[:8000]
             
@@ -60,7 +62,7 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                 "これらを基に、類似している単語を使用して似ている請求項を以下に記述してください。:"
             )
             if(sample_number!=0):
-                text = await chat_sample(prompt,model)
+                text = chat_sample(prompt,model)
             else:
                 text = combined_claims
             text = text[:8000]  # 長すぎる入力をカット
@@ -71,7 +73,7 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
             result_titles=[]
             matchlist=[]
             # 検索の選択
-            for result in await search_map[search](text,top):
+            for result in search_map[search](text,top):
                 result_titles.append(result.get("title"))
                 matchlist.append(sum(
                     any(term in title for term in result_titles)
@@ -87,11 +89,11 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
             logger.addHandler(AzureLogHandler(connection_string="InstrumentationKey=90400575-c365-4f36-b271-dbd91fc5fc37;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=071ce0b4-9e9c-45c0-b6c2-13240885c6fd"))
 
             # カスタムディメンション付きでログ送信
-            logger.info(f"search_result_1", extra={
+            logger.info("search_result_2", extra={
                 "custom_dimensions": {
-                    "sourceSize": sample_number, # 元データ数
-                    "searchCount": top,          # 検索数（横軸）
-                    "matchCount": matchlist,         # 一致数（縦軸)
+                    "sampleNumber": str(sample_number), # 元データ数
+                    "top": str(top),          # 検索数（横軸）
+                    "matchList": str(matchlist),         # 一致数（縦軸)
                     "model": model,          # モデル
                     "search": search          # 検索モデル
                 }
@@ -111,7 +113,7 @@ client = AzureOpenAI(
 )
 
 
-async def chat_sample(message: str,model:str="gpt-35-turbo") -> str:
+def chat_sample(message: str,model:str="gpt-35-turbo") -> str:
     logging.info(f'mago log.message={message}.model={model}')
     completion = client.chat.completions.create(
         model = model, 
@@ -124,7 +126,7 @@ async def chat_sample(message: str,model:str="gpt-35-turbo") -> str:
     ) 
     return(completion.choices[0].message.content)
 
-async def get_embedding(text: str, engine="text-embedding-ada-002"):
+def get_embedding(text: str, engine="text-embedding-ada-002"):
     # OpenAI埋め込みモデルを使用してテキストをベクトル化
     response = client.embeddings.create(
         input=text,
@@ -154,7 +156,7 @@ container_client = blob_service_client.get_container_client(container_name)
 
 
 # 選択した数PDFの請求項を取得
-async def get_random_nameList(count:int=3) -> list[dict] :
+def get_random_nameList(count:int=3) -> list[dict] :
     if(count==0):
         count=1
     # BLOB一覧の取得
@@ -242,7 +244,7 @@ endpoint = f"https://{service_name}.search.windows.net/"
 # index_name = os.getenv('INDEX_NAME', 'default-secret-key')
 
 # ベクトル検索
-async def search_sample_vector(message: str,top:int=5) -> str:
+def search_sample_vector(message: str,top:int=5) -> str:
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
         vector_query = VectorizedQuery(
@@ -257,7 +259,7 @@ async def search_sample_vector(message: str,top:int=5) -> str:
 
 
 # index検索
-async def search_sample_index(message: str,top:int=5) -> str:
+def search_sample_index(message: str,top:int=5) -> str:
     client = SearchClient(endpoint=endpoint, index_name=index_name, credential=credential)
 
     # クエリを実行して検索
@@ -266,7 +268,7 @@ async def search_sample_index(message: str,top:int=5) -> str:
 
 
 # ハイブリッド検索
-async def search_sample_hybrid(message: str,top:int=5) -> str:
+def search_sample_hybrid(message: str,top:int=5) -> str:
         logging.info(f'mago log.message={message}.top={top}')
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
@@ -286,7 +288,7 @@ async def search_sample_hybrid(message: str,top:int=5) -> str:
 
 
 # セマンティック検索
-async def search_sample_semantic(message: str,top:int=5) -> str:
+def search_sample_semantic(message: str,top:int=5) -> str:
         search_client = SearchClient(endpoint, index_name, credential)
 
         return search_client.search(
