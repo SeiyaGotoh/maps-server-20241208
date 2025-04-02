@@ -41,7 +41,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         req_body = req.get_json()
         sample_number = int(req_body.get('sample_number')or 1)#生成に使用するサンプル数、0の時そのまま使用
         try_times = int(req_body.get('try_times')or 1)#
-        name = int(req_body.get('name')or 1)#
+        name = req_body.get('name')#
         loop = int(req_body.get('loop') or 1)#ループ回数
         top = int(req_body.get('top') or 1)#検索結果数
         model=req_body.get("model")#gptモデル
