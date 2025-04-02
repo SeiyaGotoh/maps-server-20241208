@@ -29,12 +29,19 @@ for folder in os.listdir(parent_dir):
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f'Python HTTP trigger function processed a request.{req}')
+    response_data={
+    "titles": [],
+    "search_text": [],
+    "create_text": [],
+    "match": [],
+    "result_titles":[]
+    }
     try:
         req_body = req.get_json()
         sample_number = req_body.get('sample_number')
         loop = int(req.params.get('loop') or 1)
         
-        for i in range(loop):
+        for _ in range(loop):
             temp = get_random_nameList(int(sample_number))
             logging.info(f'mago log.temp={temp}')
             titles = [claim["title"] for claim in temp] 
@@ -49,18 +56,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             )
             text = chat_sample(prompt,req_body.get("model"))
             logging.info(f'mago log.text={text}')
-            response["titles"][i]=titles
-            response["search_text"][i]=temp
-            response["create_text"][i]=text
+            response_data["titles"].append(titles)
+            response_data["search_text"].append(temp)
+            response_data["create_text"].append(text)
             result_titles=[]
             # 検索の選択
             for result in search_map[req_body.get("search")](text,int(req_body.get("top"))):
                 result_titles.append(result.get("title"))
-            response["result_titles"]=result_titles
+            response_data["result_titles"].append(result_titles)
             #一致しているtitleをカウント
             match=sum(1 for title in result_titles if title in titles)
             logging.info(f'mago log.match={match}')
-            response["match"][i]=match
+            response_data["match"].append(match)
             logging.info("search_result", extra={
                 "custom_dimensions": {
                     "sourceSize": int(sample_number),        # 元データ数
@@ -69,8 +76,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 }
             })
 
-        return func.HttpResponse(json.dumps(response), mimetype="application/json")
+        return func.HttpResponse(json.dumps(response_data), mimetype="application/json")
     except Exception as e:
+        logging.error(f'mago log.error={e}') 
         return func.HttpResponse(e, mimetype="application/json")
 
 from openai import AzureOpenAI
@@ -181,7 +189,7 @@ def get_random_nameList(count:int=3) -> list[dict] :
                         })
                         break
         except Exception as e:
-            logging.info(f'mago log.error={e}') 
+            logging.error(f'mago log.error={e}') 
             result.append({
                             "title": "error-sample",
                             "page": 1,
