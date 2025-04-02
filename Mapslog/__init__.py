@@ -28,7 +28,7 @@ for folder in os.listdir(parent_dir):
         sys.path.append(folder_path)
 
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
+async def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f'Python HTTP trigger function processed a request.{req}')
     response_data={
         "titles": [],
@@ -46,8 +46,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         model=req_body.get("model")#gptモデル
         search=req_body.get("search")#searchモデル
         
+        logging.info(f'mago log.loop={loop}.top={top}')
         for _ in range(loop):
-            temp = get_random_nameList(sample_number)
+            temp = await get_random_nameList(sample_number)
             titles = [claim["title"] for claim in temp] 
             combined_claims = "\n\n".join([f"{claim['text']}" for claim in temp])[:8000]
             
@@ -59,17 +60,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 "これらを基に、類似している単語を使用して似ている請求項を以下に記述してください。:"
             )
             if(sample_number!=0):
-                text = chat_sample(prompt,model)
+                text = await chat_sample(prompt,model)
             else:
                 text = combined_claims
             text = text[:8000]  # 長すぎる入力をカット
+            logging.info(f'mago log.text={text}.combined_claims={combined_claims}.sample_number!=0={sample_number!=0}')
             response_data["titles"].append(titles)
             response_data["search_text"].append(temp)
             response_data["create_text"].append(text)
             result_titles=[]
             matchlist=[]
             # 検索の選択
-            for result in search_map[search](text,top):
+            for result in await search_map[search](text,top):
                 result_titles.append(result.get("title"))
                 matchlist.append(sum(
                     any(term in title for term in result_titles)
@@ -109,7 +111,7 @@ client = AzureOpenAI(
 )
 
 
-def chat_sample(message: str,model:str="gpt-35-turbo") -> str:
+async def chat_sample(message: str,model:str="gpt-35-turbo") -> str:
     logging.info(f'mago log.message={message}.model={model}')
     completion = client.chat.completions.create(
         model = model, 
@@ -122,7 +124,7 @@ def chat_sample(message: str,model:str="gpt-35-turbo") -> str:
     ) 
     return(completion.choices[0].message.content)
 
-def get_embedding(text: str, engine="text-embedding-ada-002"):
+async def get_embedding(text: str, engine="text-embedding-ada-002"):
     # OpenAI埋め込みモデルを使用してテキストをベクトル化
     response = client.embeddings.create(
         input=text,
@@ -152,7 +154,7 @@ container_client = blob_service_client.get_container_client(container_name)
 
 
 # 選択した数PDFの請求項を取得
-def get_random_nameList(count:int=3) -> list[dict] :
+async def get_random_nameList(count:int=3) -> list[dict] :
     if(count==0):
         count=1
     # BLOB一覧の取得
@@ -240,7 +242,7 @@ endpoint = f"https://{service_name}.search.windows.net/"
 # index_name = os.getenv('INDEX_NAME', 'default-secret-key')
 
 # ベクトル検索
-def search_sample_vector(message: str,top:int=5) -> str:
+async def search_sample_vector(message: str,top:int=5) -> str:
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
         vector_query = VectorizedQuery(
@@ -255,7 +257,7 @@ def search_sample_vector(message: str,top:int=5) -> str:
 
 
 # index検索
-def search_sample_index(message: str,top:int=5) -> str:
+async def search_sample_index(message: str,top:int=5) -> str:
     client = SearchClient(endpoint=endpoint, index_name=index_name, credential=credential)
 
     # クエリを実行して検索
@@ -264,7 +266,7 @@ def search_sample_index(message: str,top:int=5) -> str:
 
 
 # ハイブリッド検索
-def search_sample_hybrid(message: str,top:int=5) -> str:
+async def search_sample_hybrid(message: str,top:int=5) -> str:
         logging.info(f'mago log.message={message}.top={top}')
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
@@ -284,7 +286,7 @@ def search_sample_hybrid(message: str,top:int=5) -> str:
 
 
 # セマンティック検索
-def search_sample_semantic(message: str,top:int=5) -> str:
+async def search_sample_semantic(message: str,top:int=5) -> str:
         search_client = SearchClient(endpoint, index_name, credential)
 
         return search_client.search(
