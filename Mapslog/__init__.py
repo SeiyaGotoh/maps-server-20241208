@@ -39,7 +39,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         "search_text": [],
         "create_text": [],
         "match": [],
-        "result_titles":[]
+        "result_titles":[],
+        "result_page":[]
     }
     try:
         req_body = req.get_json()
