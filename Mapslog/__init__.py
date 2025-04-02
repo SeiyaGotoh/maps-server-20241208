@@ -49,7 +49,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.info(f'mago log.loop={loop}.top={top}')
         for _ in range(loop):
             temp = get_random_nameList(sample_number)
-            if not result:
+            if not temp:
+                logging.info(f'[Skip] temp')
                 continue
             titles = [claim["title"] for claim in temp] 
             combined_claims = "\n\n".join([f"{claim['text']}" for claim in temp])[:8000]
