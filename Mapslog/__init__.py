@@ -35,15 +35,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     loop = int(req.params.get('loop') or 1)
     
     for i in range(loop):
-        sample_number = req_body.get('sample_number')
         temp = get_random_nameList(int(sample_number))
         titles = [claim["title"] for claim in temp] 
         combined_claims = "\n\n".join([f"{claim['text']}" for claim in temp])
         # まとめたテキストを新しい請求項の生成用に加工
         prompt = (
-            "以下に複数の請求項を示します。それらを基にして、新しい創造的な請求項を1つ作成してください。:\n\n"
+            "以下に複数の請求項を示します。それらを基にして、似ている請求項を1つ作成してください。:\n\n"
             f"{combined_claims}\n\n"
-            "これらを基にした新しい請求項を以下に記述してください。:"
+            "これらを基にした似ている請求項を以下に記述してください。:"
         )
         text = chat_sample(prompt,req_body.get("model"))
         response["titles"][i]=titles
@@ -59,8 +58,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         response["match"][i]=match
         logging.info("search_result", extra={
             "custom_dimensions": {
-                "sourceSize": int(req_body.get("top")),        # 元データ数
-                "searchCount": int(req_body.get("search")),        # 検索数（横軸）
+                "sourceSize": int(sample_number),        # 元データ数
+                "searchCount": int(req_body.get("top")),        # 検索数（横軸）
                 "matchCount": match           # 一致数（縦軸）
             }
         })
@@ -116,12 +115,6 @@ blob_service_client = BlobServiceClient.from_connection_string(connection_string
 container_client = blob_service_client.get_container_client(container_name)
 
 
-# コンテナ一覧の取得
-def get_storage_nameList():
-    containers = blob_service_client.list_containers()
-    for container in containers:
-        print("Container Name:", container['name'])
-
 
 # 選択した数PDFの請求項を取得
 def get_random_nameList(count:int=3) -> list[dict] :
@@ -133,6 +126,9 @@ def get_random_nameList(count:int=3) -> list[dict] :
         # BLOBデータのダウンロード
         blob_client = container_client.get_blob_client(pdf_blob.name)
         pdf_data = blob_client.download_blob().readall()
+        if not pdf_data.startswith(b"%PDF"):
+            logging.info(f"[Skip] {pdf_blob.name} is not a valid PDF file.")
+            continue
         # PDFデータの読み取り
         with fitz.open(stream=pdf_data, filetype="pdf") as pdf_document:
             # 開始と終了のキーワード
