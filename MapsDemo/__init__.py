@@ -56,7 +56,7 @@ def search_sample_vector(message: str,top:int=5) -> str:
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
         vector_query = VectorizableTextQuery(
-                vector=message, k_nearest_neighbors=50, fields="text_vector", exhaustive=True
+                text=message, k_nearest_neighbors=50, fields="text_vector", exhaustive=True
                 )
         return search_client.search(
                 search_text=message,# フルテキスト検索は空にします
