@@ -75,3 +75,4 @@ typing_extensions==4.12.2
 tzdata==2025.1
 urllib3==2.2.3
 uvicorn==0.34.0
+opencensus-ext-azure==1.1.14

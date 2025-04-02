@@ -4,6 +4,7 @@ import azure.functions as func
 import os
 import sys
 import json
+from opencensus.ext.azure.log_exporter import AzureLogHandler
 
 
 
@@ -54,7 +55,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             prompt = (
                 "以下に複数の請求項を示します。それらを基にして、似ている請求項を1つ作成してください。:\n\n"
                 f"{combined_claims}\n\n"
-                "これらを基にした似ている請求項を以下に記述してください。:"
+                "これらを基に、類似している単語を使用して似ている請求項を以下に記述してください。:"
             )
             if(sample_number!=0):
                 text = chat_sample(prompt,model)
@@ -73,7 +74,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             match=sum(1 for title in result_titles if title in titles)
             logging.info(f'mago log.match={match}')
             response_data["match"].append(match)
-            logging.info("search_result", extra={
+            logger = logging.getLogger("my_logger")
+            logger.setLevel(logging.INFO)
+            logger.addHandler(AzureLogHandler(connection_string="InstrumentationKey=90400575-c365-4f36-b271-dbd91fc5fc37;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=071ce0b4-9e9c-45c0-b6c2-13240885c6fd"))
+
+            # カスタムディメンション付きでログ送信
+            logger.info("search_result", extra={
                 "custom_dimensions": {
                     "sourceSize": sample_number,        # 元データ数
                     "searchCount": top,        # 検索数（横軸）
