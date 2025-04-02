@@ -44,6 +44,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         loop = int(req_body.get('loop') or 1)#ループ回数
         top = int(req_body.get('top') or 1)#検索結果数
         model=req_body.get("model")#gptモデル
+        search=req_body.get("search")#searchモデル
         
         for _ in range(loop):
             temp = get_random_nameList(sample_number)
@@ -67,7 +68,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             response_data["create_text"].append(text)
             result_titles=[]
             # 検索の選択
-            for result in search_map[req_body.get("search")](text,top):
+            for result in search_map[search](text,top):
                 result_titles.append(result.get("title"))
             response_data["result_titles"].append(result_titles)
             #一致しているtitleをカウント
@@ -79,11 +80,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logger.addHandler(AzureLogHandler(connection_string="InstrumentationKey=90400575-c365-4f36-b271-dbd91fc5fc37;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=071ce0b4-9e9c-45c0-b6c2-13240885c6fd"))
 
             # カスタムディメンション付きでログ送信
-            logger.info("search_result", extra={
+            logger.info(f"search_result_1", extra={
                 "custom_dimensions": {
-                    "sourceSize": sample_number,        # 元データ数
-                    "searchCount": top,        # 検索数（横軸）
-                    "matchCount": match           # 一致数（縦軸）
+                    "sourceSize": sample_number, # 元データ数
+                    "searchCount": top,          # 検索数（横軸）
+                    "matchCount": match,         # 一致数（縦軸)
+                    "model": model,          # モデル
+                    "search": search          # 検索モデル
                 }
             })
 
@@ -283,7 +286,7 @@ def search_sample_semantic(message: str,top:int=5) -> str:
                 search_text=message,
                 query_type="semantic", 
                 query_caption="extractive",  # 説明を含む結果を提供する設定
-                query_answer="extractive",  # クエリに基づく要約回答を取得する
+                query_answer="extractive",   # クエリに基づく要約回答を取得する
                 top=top 
         )
 
