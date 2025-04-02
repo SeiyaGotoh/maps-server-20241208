@@ -34,9 +34,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         sample_number = req_body.get('sample_number')
         loop = int(req.params.get('loop') or 1)
         
-        logging.info(f'mago log.sample_number={sample_number}.loop={loop}')
         for i in range(loop):
             temp = get_random_nameList(int(sample_number))
+            logging.info(f'mago log.temp={temp}')
             titles = [claim["title"] for claim in temp] 
             combined_claims = "\n\n".join([f"{claim['text']}" for claim in temp])
             
@@ -126,7 +126,6 @@ container_client = blob_service_client.get_container_client(container_name)
 
 # 選択した数PDFの請求項を取得
 def get_random_nameList(count:int=3) -> list[dict] :
-    logging.info(f'mago log.count={count}')
     # BLOB一覧の取得
     blobs = list(container_client.list_blobs())
     random_blobs = random.sample(blobs, count)
@@ -139,46 +138,55 @@ def get_random_nameList(count:int=3) -> list[dict] :
             logging.info(f"[Skip] {pdf_blob.name} is not a valid PDF file.")
             continue
         # PDFデータの読み取り
-        logging.info(f'mago log.pdf_data={pdf_data}')
-        with fitz.open(stream=pdf_data, filetype="pdf") as pdf_document:
-            # 開始と終了のキーワード
-            start_keyword = "【請求項"
-            end_keyword = "【発明の詳細な説明】"
-            for page_number in range(pdf_document.page_count):
-                page = pdf_document.load_page(page_number)
-                text = page.get_text()
+        logging.info(f'mago log.count={count}')
+        try:
+            with fitz.open(stream=pdf_data, filetype="pdf") as pdf_document:
+                # 開始と終了のキーワード
+                logging.info(f'mago log.pdf_document={pdf_document}') 
+                start_keyword = "【請求項"
+                end_keyword = "【発明の詳細な説明】"
+                for page_number in range(pdf_document.page_count):
+                    page = pdf_document.load_page(page_number)
+                    text = page.get_text()
 
-                # キーワードによる範囲抽出
-                start_index = text.find(start_keyword)
-                end_index = text.find(end_keyword)
-                if start_index != -1:
-                    # 最初のキーワードが見つかった場合、次のキーワードを探す
-                    next_claim_index = text.find(start_keyword, start_index + len(start_keyword))
-                    end_desc_index = text.find(end_keyword, start_index + len(start_keyword))
+                    # キーワードによる範囲抽出
+                    start_index = text.find(start_keyword)
+                    end_index = text.find(end_keyword)
+                    if start_index != -1:
+                        # 最初のキーワードが見つかった場合、次のキーワードを探す
+                        next_claim_index = text.find(start_keyword, start_index + len(start_keyword))
+                        end_desc_index = text.find(end_keyword, start_index + len(start_keyword))
 
-                    # 2つのインデックスのうち、存在する方か、より早く出現する方を終了位置とする
-                    if next_claim_index != -1 and (end_desc_index == -1 or next_claim_index < end_desc_index):
-                        end_index = next_claim_index
-                    else:
-                        end_index = end_desc_index
+                        # 2つのインデックスのうち、存在する方か、より早く出現する方を終了位置とする
+                        if next_claim_index != -1 and (end_desc_index == -1 or next_claim_index < end_desc_index):
+                            end_index = next_claim_index
+                        else:
+                            end_index = end_desc_index
 
-                if start_index != -1 and end_index != -1 and end_index > start_index:
-                    # 該当部分の抽出と表示
-                    relevant_text = text[start_index:end_index]
-                    result.append({
-                        "title": pdf_blob.name,
-                        "page":page_number + 1,
-                        "text": relevant_text.replace("\n", "")
-                    })
-                    break
-                elif start_index != -1:
-                    # 終了キーワードが同ページにない場合、開始以降をすべて表示
-                    result.append({
-                        "title": pdf_blob.name,
-                        "page":page_number + 1,
-                        "text": text[start_index:]
-                    })
-                    break
+                    if start_index != -1 and end_index != -1 and end_index > start_index:
+                        # 該当部分の抽出と表示
+                        relevant_text = text[start_index:end_index]
+                        result.append({
+                            "title": pdf_blob.name,
+                            "page":page_number + 1,
+                            "text": relevant_text.replace("\n", "")
+                        })
+                        break
+                    elif start_index != -1:
+                        # 終了キーワードが同ページにない場合、開始以降をすべて表示
+                        result.append({
+                            "title": pdf_blob.name,
+                            "page":page_number + 1,
+                            "text": text[start_index:]
+                        })
+                        break
+        except Exception as e:
+            logging.info(f'mago log.error={e}') 
+            result.append({
+                            "title": "error-sample",
+                            "page": 1,
+                            "text": "計算機能の向上"
+                        })
     return result
 
 # azureの検索機能
