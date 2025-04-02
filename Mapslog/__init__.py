@@ -71,7 +71,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             if(sample_number!=0):
                 text = chat_sample(prompt,model)
             else:
-                text = combined_claims
+                text = [claim["text"] for claim in temp] 
             text = text[:8000]  # 長すぎる入力をカット
             logging.info(f'mago log.text={text}.combined_claims={combined_claims}.sample_number!=0={sample_number!=0}')
             response_data["titles"].append(titles)
