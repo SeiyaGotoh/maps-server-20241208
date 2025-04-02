@@ -29,6 +29,10 @@ for folder in os.listdir(parent_dir):
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
+    logger = logging.getLogger("my_logger")
+    logger.setLevel(logging.INFO)
+    logger.addHandler(AzureLogHandler(connection_string="InstrumentationKey=90400575-c365-4f36-b271-dbd91fc5fc37;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=071ce0b4-9e9c-45c0-b6c2-13240885c6fd"))
+
     logging.info(f'Python HTTP trigger function processed a request.{req}')
     response_data={
         "titles": [],
@@ -73,25 +77,25 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             response_data["search_text"].append(temp)
             response_data["create_text"].append(text)
             result_titles=[]
+            result_page=[]
             matchlist=[]
             # 検索の選択
             for result in search_map[search](text,top):
                 result_titles.append(result.get("title"))
+                result_page.append(result)
                 matchlist.append(sum(
                     any(term in title for term in result_titles)
                     for title in titles
                 ))
             response_data["result_titles"].append(result_titles)
+            response_data["result_page"].append(result_page[0])
             #一致しているtitleをカウント
             match=sum(1 for title in result_titles if title in titles)
             logging.info(f'mago log.match={match}')
             response_data["match"].append(match)
-            logger = logging.getLogger("my_logger")
-            logger.setLevel(logging.INFO)
-            logger.addHandler(AzureLogHandler(connection_string="InstrumentationKey=90400575-c365-4f36-b271-dbd91fc5fc37;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=071ce0b4-9e9c-45c0-b6c2-13240885c6fd"))
 
             # カスタムディメンション付きでログ送信
-            logger.info("search_result_3", extra={
+            logger.info("search_result_4", extra={
                 "custom_dimensions": {
                     "sampleNumber": str(sample_number), # 元データ数
                     "top": str(top),          # 検索数（横軸）
