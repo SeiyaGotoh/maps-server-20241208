@@ -29,42 +29,49 @@ for folder in os.listdir(parent_dir):
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f'Python HTTP trigger function processed a request.{req}')
+    try:
+        req_body = req.get_json()
+        sample_number = req_body.get('sample_number')
+        loop = int(req.params.get('loop') or 1)
+        
+        logging.info(f'mago log.sample_number={sample_number}.loop={loop}')
+        for i in range(loop):
+            temp = get_random_nameList(int(sample_number))
+            titles = [claim["title"] for claim in temp] 
+            combined_claims = "\n\n".join([f"{claim['text']}" for claim in temp])
+            
+            logging.info(f'mago log.temp={temp}.titles={titles}.combined_claims={combined_claims}')
+            # まとめたテキストを新しい請求項の生成用に加工
+            prompt = (
+                "以下に複数の請求項を示します。それらを基にして、似ている請求項を1つ作成してください。:\n\n"
+                f"{combined_claims}\n\n"
+                "これらを基にした似ている請求項を以下に記述してください。:"
+            )
+            text = chat_sample(prompt,req_body.get("model"))
+            logging.info(f'mago log.text={text}')
+            response["titles"][i]=titles
+            response["search_text"][i]=temp
+            response["create_text"][i]=text
+            result_titles=[]
+            # 検索の選択
+            for result in search_map[req_body.get("search")](text,int(req_body.get("top"))):
+                result_titles.append(result.get("title"))
+            response["result_titles"]=result_titles
+            #一致しているtitleをカウント
+            match=sum(1 for title in result_titles if title in titles)
+            logging.info(f'mago log.match={match}')
+            response["match"][i]=match
+            logging.info("search_result", extra={
+                "custom_dimensions": {
+                    "sourceSize": int(sample_number),        # 元データ数
+                    "searchCount": int(req_body.get("top")),        # 検索数（横軸）
+                    "matchCount": match           # 一致数（縦軸）
+                }
+            })
 
-    req_body = req.get_json()
-    sample_number = req_body.get('sample_number')
-    loop = int(req.params.get('loop') or 1)
-    
-    for i in range(loop):
-        temp = get_random_nameList(int(sample_number))
-        titles = [claim["title"] for claim in temp] 
-        combined_claims = "\n\n".join([f"{claim['text']}" for claim in temp])
-        # まとめたテキストを新しい請求項の生成用に加工
-        prompt = (
-            "以下に複数の請求項を示します。それらを基にして、似ている請求項を1つ作成してください。:\n\n"
-            f"{combined_claims}\n\n"
-            "これらを基にした似ている請求項を以下に記述してください。:"
-        )
-        text = chat_sample(prompt,req_body.get("model"))
-        response["titles"][i]=titles
-        response["search_text"][i]=temp
-        response["create_text"][i]=text
-        result_titles=[]
-        # 検索の選択
-        for result in search_map[req_body.get("search")](text,int(req_body.get("top"))):
-            result_titles.append(result.get("title"))
-        response["result_titles"]=result_titles
-        #一致しているtitleをカウント
-        match=sum(1 for title in result_titles if title in titles)
-        response["match"][i]=match
-        logging.info("search_result", extra={
-            "custom_dimensions": {
-                "sourceSize": int(sample_number),        # 元データ数
-                "searchCount": int(req_body.get("top")),        # 検索数（横軸）
-                "matchCount": match           # 一致数（縦軸）
-            }
-        })
-
-    return func.HttpResponse(json.dumps(response), mimetype="application/json")
+        return func.HttpResponse(json.dumps(response), mimetype="application/json")
+    except Exception as e:
+        return func.HttpResponse(e, mimetype="application/json")
 
 from openai import AzureOpenAI
 
@@ -76,6 +83,7 @@ client = AzureOpenAI(
 
 
 def chat_sample(message: str,model:str="gpt-35-turbo") -> str:
+    logging.info(f'mago log.message={message}.model={model}')
     completion = client.chat.completions.create(
         model = model, 
         messages=[
@@ -118,6 +126,7 @@ container_client = blob_service_client.get_container_client(container_name)
 
 # 選択した数PDFの請求項を取得
 def get_random_nameList(count:int=3) -> list[dict] :
+    logging.info(f'mago log.count={count}')
     # BLOB一覧の取得
     blobs = list(container_client.list_blobs())
     random_blobs = random.sample(blobs, count)
@@ -130,6 +139,7 @@ def get_random_nameList(count:int=3) -> list[dict] :
             logging.info(f"[Skip] {pdf_blob.name} is not a valid PDF file.")
             continue
         # PDFデータの読み取り
+        logging.info(f'mago log.pdf_data={pdf_data}')
         with fitz.open(stream=pdf_data, filetype="pdf") as pdf_document:
             # 開始と終了のキーワード
             start_keyword = "【請求項"
@@ -218,6 +228,7 @@ def search_sample_index(message: str,top:int=5) -> str:
 
 # ハイブリッド検索
 def search_sample_hybrid(message: str,top:int=5) -> str:
+        logging.info(f'mago log.message={message}.top={top}')
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
         vector_query = VectorizableTextQuery(
