@@ -30,20 +30,22 @@ for folder in os.listdir(parent_dir):
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f'Python HTTP trigger function processed a request.{req}')
     response_data={
-    "titles": [],
-    "search_text": [],
-    "create_text": [],
-    "match": [],
-    "result_titles":[]
+        "titles": [],
+        "search_text": [],
+        "create_text": [],
+        "match": [],
+        "result_titles":[]
     }
     try:
         req_body = req.get_json()
-        sample_number = req_body.get('sample_number')
-        loop = int(req.params.get('loop') or 1)
+        sample_number = int(req_body.get('sample_number')or 1)
+        try_times = int(req_body.get('try_times')or 1)
+        loop = int(req_body.get('loop') or 1)
+        top = int(req_body.get('top') or 1)
+        model=req_body.get("model")
         
         for _ in range(loop):
-            temp = get_random_nameList(int(sample_number))
-            logging.info(f'mago log.temp={temp}')
+            temp = get_random_nameList(sample_number)
             titles = [claim["title"] for claim in temp] 
             combined_claims = "\n\n".join([f"{claim['text']}" for claim in temp])
             
@@ -54,14 +56,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 f"{combined_claims}\n\n"
                 "これらを基にした似ている請求項を以下に記述してください。:"
             )
-            text = chat_sample(prompt,req_body.get("model"))
-            logging.info(f'mago log.text={text}')
+            if(sample_number==0):
+                text = chat_sample(prompt,model)
+            else:
+                text = combined_claims
             response_data["titles"].append(titles)
             response_data["search_text"].append(temp)
             response_data["create_text"].append(text)
             result_titles=[]
             # 検索の選択
-            for result in search_map[req_body.get("search")](text,int(req_body.get("top"))):
+            for result in search_map[req_body.get("search")](text,top):
                 result_titles.append(result.get("title"))
             response_data["result_titles"].append(result_titles)
             #一致しているtitleをカウント
@@ -70,8 +74,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             response_data["match"].append(match)
             logging.info("search_result", extra={
                 "custom_dimensions": {
-                    "sourceSize": int(sample_number),        # 元データ数
-                    "searchCount": int(req_body.get("top")),        # 検索数（横軸）
+                    "sourceSize": sample_number,        # 元データ数
+                    "searchCount": top,        # 検索数（横軸）
                     "matchCount": match           # 一致数（縦軸）
                 }
             })
@@ -134,6 +138,8 @@ container_client = blob_service_client.get_container_client(container_name)
 
 # 選択した数PDFの請求項を取得
 def get_random_nameList(count:int=3) -> list[dict] :
+    if(count==0):
+        count=1
     # BLOB一覧の取得
     blobs = list(container_client.list_blobs())
     random_blobs = random.sample(blobs, count)
