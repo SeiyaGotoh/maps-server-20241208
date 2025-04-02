@@ -1,10 +1,8 @@
-import logging
-import traceback
-from urllib import response
-import azure.functions as func
 from shared.batch_logic import run_batch 
-import json
+import logging
+import azure.functions as func
 import uuid
+import threading
 
 
 
@@ -14,7 +12,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     run_id = str(uuid.uuid4())  # GUID発行
     logging.info('バッチ処理起動')
     
-    run_batch(run_id)
+    # バックグラウンドでバッチ処理を実行
+    thread = threading.Thread(target=run_batch, args=(run_id,))
+    thread.start()
 
     return func.HttpResponse(f"バッチ実行: {run_id}", status_code=200)
 
