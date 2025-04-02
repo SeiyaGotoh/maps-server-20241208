@@ -282,9 +282,9 @@ def search_sample_hybrid(message: str,top:int=5) -> str:
                 text=message, 
                 k_nearest_neighbors=50, 
                 fields="text_vector", 
-                exhaustive=True,
-                top_k=5,  # 類似度の高い上位5件を取得
-                boost=1.0  # ベクトル検索の重要度（boost値）
+                exhaustive=True
+                # top_k=5,  # 類似度の高い上位5件を取得
+                # boost=1.0  # ベクトル検索の重要度（boost値）
         )
         return search_client.search(
                 search_text=message,
