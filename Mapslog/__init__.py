@@ -78,29 +78,26 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             response_data["search_text"].append(temp)
             response_data["create_text"].append(text)
             result_titles=[]
-            result_page=[]
+            match_count=[]
             matchlist=[]
             # 検索の選択
             for result in search_map[search](text,top):
                 result_titles.append(result.get("title"))
-                result_page.append(result)
-                matchlist.append(sum(
-                    any(term in title for term in result_titles)
-                    for title in titles
-                ))
+                matchlist.append(len(set(titles) & set(result_titles)))
+                match_count.append(sum(1 for title in result_titles if title in titles))
             response_data["result_titles"].append(result_titles)
-            response_data["result_page"].append(result_page[0])
             #一致しているtitleをカウント
             match=sum(1 for title in result_titles if title in titles)
             logging.info(f'mago log.match={match}')
             response_data["match"].append(match)
 
             # カスタムディメンション付きでログ送信
-            logger.info("search_result_4", extra={
+            logger.info("search_result_5", extra={
                 "custom_dimensions": {
                     "sampleNumber": str(sample_number), # 元データ数
                     "top": str(top),          # 検索数（横軸）
                     "matchList": str(matchlist),         # 一致数（縦軸)
+                    "matchCount": str(match_count),      # 一致数（縦軸)重複あり
                     "model": model,          # モデル
                     "search": search,          # 検索モデル
                     "count": str(i),
