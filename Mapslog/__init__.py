@@ -67,9 +67,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             response_data["search_text"].append(temp)
             response_data["create_text"].append(text)
             result_titles=[]
+            matchlist=[]
             # 検索の選択
             for result in search_map[search](text,top):
                 result_titles.append(result.get("title"))
+                matchlist.append(sum(
+                    any(term in title for term in result_titles)
+                    for title in titles
+                ))
             response_data["result_titles"].append(result_titles)
             #一致しているtitleをカウント
             match=sum(1 for title in result_titles if title in titles)
@@ -84,7 +89,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 "custom_dimensions": {
                     "sourceSize": sample_number, # 元データ数
                     "searchCount": top,          # 検索数（横軸）
-                    "matchCount": match,         # 一致数（縦軸)
+                    "matchCount": matchlist,         # 一致数（縦軸)
                     "model": model,          # モデル
                     "search": search          # 検索モデル
                 }
