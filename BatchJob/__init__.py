@@ -20,7 +20,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # キュークライアントを作成してメッセージを送信
     queue_client = QueueClient.from_connection_string(conn_str, queue_name)
-    queue_client.create_queue()  # 存在しない場合に作成
+    if not queue_client.exists():
+        queue_client.create_queue()
     queue_client.send_message(json.dumps({ "run_id": run_id }))
 
     return func.HttpResponse(f"バッチ実行ID: {run_id}", status_code=202)
