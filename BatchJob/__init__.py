@@ -21,9 +21,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         # キュークライアントを作成してメッセージを送信
         queue_client = QueueClient.from_connection_string(conn_str, queue_name)
-        if not queue_client.exists():
-            logging.info(f"[{run_id}] キューが存在しないため作成します: {queue_name};{conn_str}")
-            queue_client.create_queue()
         queue_client.send_message(json.dumps({ "run_id": run_id }))
 
         return func.HttpResponse(f"バッチ実行ID: {run_id}", status_code=202)
