@@ -16,7 +16,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     # ストレージ接続文字列とキュー名（環境変数から取得）
     conn_str = os.environ["AzureWebQueueJobsStorage"]
-    queue_name = "mago-batch-test-queue"
+    queue_name = "mago-batch-test-queue-poison"
 
     # キュークライアントを作成してメッセージを送信
     queue_client = QueueClient.from_connection_string(conn_str, queue_name)
