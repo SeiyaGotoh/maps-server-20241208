@@ -5,7 +5,7 @@
       "name": "msg",
       "type": "queueTrigger",
       "direction": "in",
-      "queueName": "batchqueue",
+      "queueName": "mago-batch-test-queue",
       "connection": "AzureWebQueueJobsStorage"
     }
   ]
