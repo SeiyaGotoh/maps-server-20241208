@@ -5,6 +5,9 @@ from shared.batch_logic import run_batch
 def main(msg: str):
     logging.info("QueueTrigger 起動しました。msg内容:")
     logging.info(msg)
+    if msg.dequeue_count > 1:
+        logging.warning("このメッセージは2回目以降の処理です。スキップして削除します。")
+        return 
     try:
         payload = json.loads(msg)
         run_id = payload.get("run_id", "unknown")
