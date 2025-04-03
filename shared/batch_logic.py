@@ -5,7 +5,7 @@ from shared.azure_db import get_storage_name_List
 import time
 import logging
 
-def run_batch(run_id: str):
+def run_batch(run_id: str="test"):
     log_prefix = f"[{run_id}]"
     logging.info(f"{log_prefix} バッチ処理を開始します")
 
