@@ -12,7 +12,7 @@ def run_batch(run_id: str="test"):
     try:
         
         logging.info(f"{log_prefix} バッチ処理 - 20分待機開始")
-        time.sleep(20 * 60)  # 20分待機（= 1200秒）
+        time.sleep(5 * 60)  # 5分待機
         logging.info(f"{log_prefix} 20分待機終了 - 処理完了")
         container_list = get_storage_name_List()
         
