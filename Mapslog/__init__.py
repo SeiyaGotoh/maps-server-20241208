@@ -51,10 +51,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         top = int(req_body.get('top') or 1)#検索結果数
         model=req_body.get("model")#gptモデル
         search=req_body.get("search")#searchモデル
+        store = req_body.get("store") or "summary-text-only-test"#store
         
         logging.info(f'mago log.loop={loop}.top={top}')
         for i in range(loop):
-            temp = get_random_nameList(sample_number)
+            temp=[]
+            if(store=="summary-text-only-test"):
+                temp = get_random_nameList_v2(sample_number)
+            else:
+                temp = get_random_nameList(sample_number)
             if not temp:
                 logging.info(f'[Skip] temp')
                 continue
@@ -64,9 +69,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.info(f'mago log.temp={temp}.titles={titles}.combined_claims={combined_claims}')
             # まとめたテキストを新しい請求項の生成用に加工
             prompt = (
-                "以下に複数の請求項を示します。それらを基にして、似ている請求項を1つ作成してください。:\n\n"
+                "以下に複数の仕組みを示します。それらを基にして、似ている仕組みを1つ作成してください。:\n\n"
                 f"{combined_claims}\n\n"
-                "これらを基に、類似している単語を使用して似ている請求項を以下に記述してください。:"
+                "これらを基に、類似している単語を使用して似ている仕組みを以下に記述してください。:"
             )
             if(sample_number!=0):
                 text = chat_sample(prompt,model)
@@ -92,7 +97,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             response_data["match"].append(match)
 
             # カスタムディメンション付きでログ送信
-            logger.info("search_result_5", extra={
+            logger.info("search_result_6", extra={
                 "custom_dimensions": {
                     "sampleNumber": str(sample_number), # 元データ数
                     "top": str(top),          # 検索数（横軸）
@@ -143,6 +148,7 @@ def get_embedding(text: str, engine="text-embedding-ada-002"):
 from azure.storage.blob import BlobServiceClient
 import random
 import fitz
+import chardet
 # import os
 # from dotenv import load_dotenv
 # # .env ファイルの読み込み (ローカル環境用)
@@ -159,8 +165,31 @@ blob_service_client = BlobServiceClient.from_connection_string(connection_string
 # container_name = os.getenv('container_name', 'azureml-blobstore-7e664d9f-7a26-47bc-81b8-b1545cc9cedd')
 container_client = blob_service_client.get_container_client(container_name)
 
+OUTPUT_CONTAINER = os.getenv("OUTPUT_BLOB_CONTAINER") 
+CONNECT_STR = os.getenv("PatentBlobConnectionString")
+blob_service_client_h = BlobServiceClient.from_connection_string(CONNECT_STR)
+output_container_client = blob_service_client_h.get_container_client(OUTPUT_CONTAINER)
+# 選択した数PDFの請求項を取得
+def get_random_nameList_v2(count:int=3) -> list[dict] :
 
+    if(count==0):
+        count=1
+    blobs = list(output_container_client.list_blobs())
+    random_blobs = random.sample(blobs, count)
+    result = []
+    for pdf_blob in random_blobs:
+        # BLOBデータのダウンロード
+        blob_client = output_container_client.get_blob_client(pdf_blob.name)
+        blob_bytes = blob_client.download_blob().readall()
+        encoding = chardet.detect(blob_bytes)["encoding"]
 
+        # テキストデータ読み取り
+        blob_data = blob_bytes.decode(encoding)
+        result.append({
+            "title": pdf_blob.name,
+            "text": blob_data
+        })
+    return result
 # 選択した数PDFの請求項を取得
 def get_random_nameList(count:int=3) -> list[dict] :
     if(count==0):
@@ -242,7 +271,8 @@ from azure.search.documents.models import VectorizableTextQuery
 
 service_name = "maps"
 admin_key = "EKz0IbLfgliPcYLCYcQVLiukrwthFaIcNe4byooh1mAzSeAuV0Vp"
-index_name="vector-1725588957492"
+index_name_0="vector-1725588957492"
+index_name="vector-summary-text-only-test"
 # service_name = os.getenv('service_name', 'default-secret-key')
 # admin_key = os.getenv('admin_key', 'default-secret-key')
 credential = AzureKeyCredential(admin_key)
