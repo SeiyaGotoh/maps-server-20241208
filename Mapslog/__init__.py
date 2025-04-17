@@ -56,8 +56,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.info(f'mago log.loop={loop}.top={top}')
         for i in range(loop):
             temp=[]
-            if(store=="summary-text-only-test"):
-                temp = get_random_nameList_v2(sample_number)
+            if(store!="azureml-blobstore-7e664d9f-7a26-47bc-81b8-b1545cc9cedd"):
+                temp = get_random_nameList_v2(sample_number,store)
             else:
                 temp = get_random_nameList(sample_number)
             if not temp:
@@ -86,7 +86,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             match_count=[]
             matchlist=[]
             # 検索の選択
-            for result in search_map[search](text,top):
+            for result in search_map[search](text,top,store):
                 result_titles.append(result.get("title"))
                 matchlist.append(len(set(titles) & set(result_titles)))
                 match_count.append(sum(1 for title in result_titles if title in titles))
@@ -97,7 +97,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             response_data["match"].append(match)
 
             # カスタムディメンション付きでログ送信
-            logger.info("search_result_6", extra={
+            logger.info("search_result_7", extra={
                 "custom_dimensions": {
                     "sampleNumber": str(sample_number), # 元データ数
                     "top": str(top),          # 検索数（横軸）
@@ -106,7 +106,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     "model": model,          # モデル
                     "search": search,          # 検索モデル
                     "count": str(i),
-                    "name": name
+                    "name": name,
+                    "store":store
                 }
             })
 
@@ -137,7 +138,7 @@ def chat_sample(message: str,model:str="gpt-35-turbo") -> str:
     ) 
     return(completion.choices[0].message.content)
 
-def get_embedding(text: str, engine="text-embedding-ada-002"):
+def get_embedding(text: str, engine="ateam-text-embedding-3-small"):
     # OpenAI埋め込みモデルを使用してテキストをベクトル化
     response = client.embeddings.create(
         input=text,
@@ -165,12 +166,11 @@ blob_service_client = BlobServiceClient.from_connection_string(connection_string
 # container_name = os.getenv('container_name', 'azureml-blobstore-7e664d9f-7a26-47bc-81b8-b1545cc9cedd')
 container_client = blob_service_client.get_container_client(container_name)
 
-OUTPUT_CONTAINER = os.getenv("OUTPUT_BLOB_CONTAINER") 
-CONNECT_STR = os.getenv("PatentBlobConnectionString")
-blob_service_client_h = BlobServiceClient.from_connection_string(CONNECT_STR)
-output_container_client = blob_service_client_h.get_container_client(OUTPUT_CONTAINER)
 # 選択した数PDFの請求項を取得
-def get_random_nameList_v2(count:int=3) -> list[dict] :
+def get_random_nameList_v2(count:int=3,store:str="") -> list[dict] :
+    CONNECT_STR = os.getenv("PatentBlobConnectionString")
+    blob_service_client_h = BlobServiceClient.from_connection_string(CONNECT_STR)
+    output_container_client = blob_service_client_h.get_container_client(store)
 
     if(count==0):
         count=1
@@ -272,7 +272,7 @@ from azure.search.documents.models import VectorizableTextQuery
 service_name = "maps"
 admin_key = "EKz0IbLfgliPcYLCYcQVLiukrwthFaIcNe4byooh1mAzSeAuV0Vp"
 index_name_0="vector-1725588957492"
-index_name="vector-summary-text-only-test"
+# index_name="vector-summary-text-only-test"
 # service_name = os.getenv('service_name', 'default-secret-key')
 # admin_key = os.getenv('admin_key', 'default-secret-key')
 credential = AzureKeyCredential(admin_key)
@@ -280,7 +280,7 @@ endpoint = f"https://{service_name}.search.windows.net/"
 # index_name = os.getenv('INDEX_NAME', 'default-secret-key')
 
 # ベクトル検索
-def search_sample_vector(message: str,top:int=5) -> str:
+def search_sample_vector(message: str,top:int=5,index_name:str="vector-summary-text-only-test") -> str:
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
         vector_query = VectorizedQuery(
@@ -295,7 +295,7 @@ def search_sample_vector(message: str,top:int=5) -> str:
 
 
 # index検索
-def search_sample_index(message: str,top:int=5) -> str:
+def search_sample_index(message: str,top:int=5,index_name:str="vector-summary-text-only-test") -> str:
     client = SearchClient(endpoint=endpoint, index_name=index_name, credential=credential)
 
     # クエリを実行して検索
@@ -304,7 +304,7 @@ def search_sample_index(message: str,top:int=5) -> str:
 
 
 # ハイブリッド検索
-def search_sample_hybrid(message: str,top:int=5) -> str:
+def search_sample_hybrid(message: str,top:int=5,index_name:str="vector-summary-text-only-test") -> str:
         logging.info(f'mago log.message={message}.top={top}')
         search_client = SearchClient(endpoint, index_name, credential)
         # ベクトル検索を実行
@@ -324,7 +324,7 @@ def search_sample_hybrid(message: str,top:int=5) -> str:
 
 
 # セマンティック検索
-def search_sample_semantic(message: str,top:int=5) -> str:
+def search_sample_semantic(message: str,top:int=5,index_name:str="vector-summary-text-only-test") -> str:
         search_client = SearchClient(endpoint, index_name, credential)
 
         return search_client.search(
