@@ -70,7 +70,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.info(f'mago log.temp={temp}.titles={titles}.combined_claims={combined_claims}')
             # まとめたテキストを新しい請求項の生成用に加工
             prompt = (
-                "以下に複数の仕組みを示します。それらを基にして、似ている仕組みを1つ作成してください。:\n\n"
+                "以下に複数の仕組みを示します。それらを基にして、似ている仕組みを1つ作成してください。compositionがある場合はcomposition内のデータを使用して下さい:\n\n"
                 f"{combined_claims}\n\n"
                 "これらを基に、類似している単語を使用して似ている仕組みを以下に記述してください。:"
             )
