@@ -52,6 +52,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         model=req_body.get("model")#gptモデル
         search=req_body.get("search")#searchモデル
         store = req_body.get("store") or "summary-text-only-test"#store
+        index_name = req_body.get("index_name") or "vector-summary-text-only-test"#store
         
         logging.info(f'mago log.loop={loop}.top={top}')
         for i in range(loop):
@@ -86,7 +87,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             match_count=[]
             matchlist=[]
             # 検索の選択
-            for result in search_map[search](text,top,store):
+            for result in search_map[search](text,top,index_name):
                 result_titles.append(result.get("title"))
                 matchlist.append(len(set(titles) & set(result_titles)))
                 match_count.append(sum(1 for title in result_titles if title in titles))
