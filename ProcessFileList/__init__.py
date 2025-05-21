@@ -9,6 +9,7 @@ import asyncio
 from azure.storage.blob.aio import BlobServiceClient
 from azure.data.tables import TableClient
 from datetime import datetime
+app = func.FunctionApp()
 
 # 3000JSONsummary.pyのロジック
 def clean_text(text):
@@ -41,7 +42,7 @@ async def process_raw_file(blob_service_client, raw_container, processed_contain
         # 生データファイルの読み込み
         raw_blob_client = blob_service_client.get_blob_client(container=raw_container, blob=file_path)
         raw_data = await raw_blob_client.download_blob()
-        content = raw_data.readall()
+        content = await raw_data.readall()
         detected = chardet.detect(content)
         encoding = detected['encoding'] if detected['encoding'] else 'utf-8'
         content = content.decode(encoding, errors='ignore')
@@ -92,11 +93,33 @@ async def main(timer: func.TimerRequest) -> None:
     table_client_processed = TableClient.from_connection_string(connection_string, processed_table)
     table_client_error = TableClient.from_connection_string(connection_string, error_table)
 
+    # テーブルが存在しない場合は作成（ProcessedFiles）
+    try:
+        table_client_processed.get_entity(partition_key="HealthCheck", row_key="Init")
+    except Exception as e:
+        if "TableNotFound" in str(e):
+            try:
+                table_client_processed.create_table()
+                log.warning("Created missing table: ProcessedFiles")
+            except Exception as ce:
+                log.error(f"Failed to create ProcessedFiles table: {ce}")
+
+    # テーブルが存在しない場合は作成（ErrorLogs）
+    try:
+        table_client_error.get_entity(partition_key="HealthCheck", row_key="Init")
+    except Exception as e:
+        if "TableNotFound" in str(e):
+            try:
+                table_client_error.create_table()
+                log.warning("Created missing table: ErrorLogs")
+            except Exception as ce:
+                log.error(f"Failed to create ErrorLogs table: {ce}")
+
     async with blob_service_client:
         # 未処理のX.txtを取得
         container_client = blob_service_client.get_container_client(file_name_container)
         blobs = container_client.list_blobs()
-        for blob in blobs:
+        async for blob in blobs:
             file_name = blob.name  # 例: 1.txt
             # 処理済みチェック
             try:
@@ -104,13 +127,23 @@ async def main(timer: func.TimerRequest) -> None:
                 if entity.get("Status") == "Completed":
                     log.info(f"{file_name} already processed.")
                     continue
-            except:
-                pass
+            except Exception as e:
+                # Tableが存在しない場合のみ作る
+                if "TableNotFound" in str(e):
+                    try:
+                        table_client_processed.create_table()
+                        log.warning(f"Created missing table: ProcessedFiles")
+                    except Exception as ce:
+                        log.error(f"Failed to create ProcessedFiles table: {ce}")
+                else:
+                    log.warning(f"Failed to check processed status for {file_name}: {str(e)}")
+
 
             # X.txtの内容を読み込む
             blob_client = container_client.get_blob_client(file_name)
             blob_data = await blob_client.download_blob()
-            file_paths = blob_data.readall().decode('utf-8').splitlines()
+            content_bytes = await blob_data.readall()
+            file_paths = content_bytes.decode('utf-8').splitlines()
 
             # タイムアウト対策（9分で中断）
             start_time = time.time()

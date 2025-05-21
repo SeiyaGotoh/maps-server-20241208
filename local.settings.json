@@ -6,7 +6,7 @@
     "AzureWebJobsFeatureFlags":"EnableWorkerIndexing",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "AzureWebQueueJobsStorage": "",
-    "PatentBlobConnectionString": "DefaultEndpointsProtocol=https;AccountName=maps5370605259;AccountKey=DefaultEndpointsProtocol=https;AccountName=maps5370605259;AccountKey=jA9t0HLlnYSLmPbSf6RkEg8emdkjhHO9JfkL5XT8HNX8H4kfq+WCHO/v0fwXgN4b083JhPDP77Fk+AStBofZPg==;EndpointSuffix=core.windows.net;EndpointSuffix=core.windows.net",
+    "PatentBlobConnectionString": "DefaultEndpointsProtocol=https;AccountName=maps5370605259;AccountKey=jA9t0HLlnYSLmPbSf6RkEg8emdkjhHO9JfkL5XT8HNX8H4kfq+WCHO/v0fwXgN4b083JhPDP77Fk+AStBofZPg==;EndpointSuffix=core.windows.net",
     "PYTHON_PATH": "venv\\Scripts\\python.exe",
     "INPUT_BLOB_CONTAINER": "all-data-txt",
     "OUTPUT_BLOB_CONTAINER": "summary-text-only"
