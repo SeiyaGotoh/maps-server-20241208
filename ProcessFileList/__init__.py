@@ -78,7 +78,7 @@ async def main(timer: func.TimerRequest) -> None:
     # 接続文字列
     connection_string = os.environ["PatentBlobConnectionString"]
     # ファイル名一覧が格納されているコンテナ名
-    file_name_container = "test-text-conversion-data"
+    file_name_container = "text-conversion-data"
     # 生データが入っているコンテナ名
     raw_container = "all-data-txt"
     # 処理済みデータを入れるコンテナ名
