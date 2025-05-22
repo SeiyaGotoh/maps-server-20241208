@@ -3,7 +3,7 @@ import csv
 import os
 
 # 接続文字列（検証用）
-connection_string = "<your-storage-connection-string>"
+connection_string = "DefaultEndpointsProtocol=https;AccountName=maps5370605259;AccountKey=jA9t0HLlnYSLmPbSf6RkEg8emdkjhHO9JfkL5XT8HNX8H4kfq+WCHO/v0fwXgN4b083JhPDP77Fk+AStBofZPg==;EndpointSuffix=core.windows.net"
 
 # Table Storageからエラー一覧を取得
 table_client = TableClient.from_connection_string(connection_string, table_name="ErrorLogs")
