@@ -32,7 +32,8 @@ def get_random_nameList_v2(count:int=3,store:str="") -> list[dict] :
         # BLOBデータのダウンロード
         blob_client = output_container_client.get_blob_client(pdf_blob.name)
         blob_bytes = blob_client.download_blob().readall()
-        encoding = chardet.detect(blob_bytes)["encoding"]
+        # 文字コードを判定（失敗時はutf-8にフォールバック）
+        encoding = chardet.detect(blob_bytes).get("encoding") or "utf-8"
 
         # テキストデータ読み取り
         blob_data = blob_bytes.decode(encoding)

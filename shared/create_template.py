@@ -11,7 +11,7 @@ def create_template_1_1_mix():
     """
     別々の２つ
     """
-    with open('temp_data.json', 'r', encoding='utf-8') as f:
+    with open('temp_data_v2.json', 'r', encoding='utf-8') as f:
         loaded_env = json.load(f)
     start = 0
     end = 10
@@ -35,7 +35,7 @@ def create_template_1_1_mix():
             )
         template_1_1_mix.append({"title":[loaded_env[i]["title"],loaded_env[i+1]["title"]],"text":chat_sample(prompt)})
     
-    with open('template_1_1_mix.json', 'w', encoding='utf-8') as f:
+    with open('template_1_1_mix_v2.json', 'w', encoding='utf-8') as f:
         json.dump(template_1_1_mix, f, ensure_ascii=False, indent=2)
 
 
@@ -124,14 +124,23 @@ def create_template_similar():
     """
     似た値の取得
     """
-    with open('temp_data.json', 'r', encoding='utf-8') as f:
+    with open('temp_data_v2.json', 'r', encoding='utf-8') as f:
         loaded_env = json.load(f)
-    start = 30
-    end = 40
+    start = 0
+    end = 10
     temp_data_similar=[]
     for i in range(start, end):
-        for result in search_sample_semantic(loaded_env[i]["text"],4,"vector-json-3000-summary-referen"):
+        for result in search_sample_semantic(loaded_env[i]["text"],4,"json-summary"):
             temp_data_similar.append({"title":result.get("title"),"text":result.get("chunk")})
     # 保存（書き込み）
-    with open('temp_data_similar.json', 'w', encoding='utf-8') as f:
+    with open('temp_data_similar_v2.json', 'w', encoding='utf-8') as f:
         json.dump(temp_data_similar, f, ensure_ascii=False, indent=2)
+        
+def create_template():
+    """
+    取得結果の保存
+    """
+    temp = get_random_nameList_v2(2,"azureml-blobstore-7e664d9f-7a26-47bc-81b8-b1545cc9cedd")
+    # 保存（書き込み）
+    with open('temp_data_v2.json', 'w', encoding='utf-8') as f:
+        json.dump(temp, f, ensure_ascii=False, indent=2)
